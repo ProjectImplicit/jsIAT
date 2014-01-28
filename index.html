@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
+        <meta HTTP-EQUIV="Expires" CONTENT="0"></meta>
+        <meta HTTP-EQUIV="Pragma" CONTENT="no-cache"></meta>
+        <meta HTTP-EQUIV="Cache-Control" CONTENT="no-cache"></meta>
+<!--        <meta name="viewport" content="user-scalable=no, width=device-width, height=device-height" />-->
+
+        <link type="text/css" rel="Stylesheet" href="styles/style.css"/>
+		<link type="text/css" rel="Stylesheet" href="styles/jqtouch.css"/>
+
+        <script language="javascript" type="text/javascript" src="js/task.js"></script>
+        <script type="text/javascript" src="js/jquery.js"></script>
+        <!-- <script type="text/javascript" src="http://www.google.com/jsapi"></script> -->
+        <script src="js/jquery.mobile-1.1.1.min.js"></script>
+        <script type="text/javascript" src="js/xmlToJson.js"></script>
+
+		<script src='js/jquery-ui-1.8.21.custom.min.js'></script>
+		<script src='js/jquery.ui.touch-punch.min.js'></script>
+
+        <script type="text/javascript">
+            function getParameterByName(name) {
+                name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+                var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                    results = regex.exec(location.search);
+                return !results ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+            }
+
+            var conf = {
+				i: (getParameterByName('task') ? getParameterByName('task') : "racea2.xml") + "?g=" + new Date().getTime(),
+                p: (getParameterByName('params') ? getParameterByName('param') : "iparams.xml") + "?g=" + new Date().getTime(),
+				tid: 1,
+				jid: '8205411104E0DC5F89E4C5F69DBF0EE2.dev2'
+            };
+        </script>
+        <script type="text/javascript" src="js/engine.js?g=<?php echo time()?>"></script>
+        <title>Implicit Association Test</title>
+</head>
+  <body>
+    <!-- required html containers. do not change -->
+        <div id="app_canvas_wrapper">
+            <div id="app_canvas">
+                <div class="wrapper clearfix">
+					<!-- Category display areas -->
+					<div id="left_screen"></div>
+					<div id="mid_screen"></div>
+					<div id="right_screen"></div>
+					<!-- Content display areas -->
+                    <div id="content">
+                        <div class="inner">
+                            <div id="stimul_wrapper" class="clearfix">
+								<div id="stimul" class="clearfix"></div>
+							</div>
+							<div id="output"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="touch-interface-wrapper" style="display:none">
+					<div id="slider-wrap" style="display:none">
+						<div id="well">
+							<h2><img id="slider" src="img/arrow.png"></strong> <span id="slider-text">Slide to Begin</span></h2>
+						</div>
+					</div>
+					<div id="swipeToBegin" style="display:none">Swipe to Begin</div>
+					<div id="touch-button" style="display:none">
+						<span>Click me twice</span>
+					</div>
+				</div>
+            </div>
+        </div>
+        <div id="profile-orientation-warning" style="display:none">
+        	This application only works in Landscape orientation </br>
+        	please rotate your screen
+        </div>
+        <div id="message"></div>
+        <div id="instructions">
+			Hit <b>E</b> for left, and <b>I</b> for right.<br />
+			If the red <font color=red>X</font> appears, press the other key to make the <font color=red>X</font> go away.</p>
+		</div>
+        <div id="instructions-gnat">
+			Hit <b>space bar</b> if the word or image belongs to one of the two categories, but DO NOT hit any key if not.
+		</div>
+
+        <!-- End of required containers -->
+    </body>
+</html>

@@ -1,0 +1,323 @@
+/*
+    Document   : style
+    Created on : Apr 10, 2011, 12:10:00 PM
+    Author     : master
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+/*
+   Syntax recommendation http://www.w3.org/TR/REC-CSS2/
+*/
+h1, h2, h3 {
+    margin: 0px;
+}
+
+html {
+	/* behavior */
+	-webkit-user-select: none;                /* disable cut copy paste */
+	-webkit-touch-callout: none;              /* disable callout, image save panel */
+	-webkit-tap-highlight-color: transparent; /* "turn off" link highlight */
+}
+
+root {
+    display: block;
+}
+
+body {
+    font-family: Arial;
+    color: #fff;
+    background: #000000;
+    margin: 0px;
+    padding: 0px;
+    position: relative;
+}
+
+*:focus {
+    outline: none;
+}
+
+.clearfix:before, .clearfix:after {  content: "\0020"; display: block; height: 0; visibility: hidden;	 }
+.clearfix:after { clear: both; }
+.clearfix { zoom: 1; }
+
+[data-role="page"] {overflow:auto}
+
+h1 {
+    padding: 10px;
+}
+
+
+#app_canvas {
+    height: 400px;
+    width: 500px;
+    position: relative;
+    border: 5px solid white;
+    margin: 10px auto;
+}
+
+#left_screen,
+#right_screen {
+    position: absolute;
+    top: 0;
+    text-align: center;
+}
+.seperator {text-align:center;}
+
+#app_canvas_wrapper {
+    position: relative;
+}
+#content {
+    clear: both;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #000000;
+    color: #fff;
+}
+
+.wrapper {
+    width: 100%;
+    height: 100%;
+    position:relative;
+}
+
+#header {
+    background: #444;
+    color: #FFF;
+    height: 80px;
+    border-bottom: 1px solid #e2e2e2;
+}
+
+.preloading {
+    position : absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000000;
+    opacity: 0.8;
+    line-height: 400px;
+    text-align: center;
+}
+
+#output {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+}
+
+#left_screen {
+    left: 0;
+}
+
+#right_screen {
+    right: 0;
+}
+
+#mid_screen {
+	position:absolute;
+	left:25%;
+	width:50%;
+	text-align:center;
+	padding:5px;
+}
+
+#stimul {
+    position: relative;
+    text-align: center;
+    z-index: 9990;
+    display: block;
+/*    font-size: 3em;*/
+}
+
+/*#stimul > div {
+        padding-top: 35px;
+}*/
+
+#stimul_wrapper {
+    position: absolute;
+    z-index: 9990;
+    display: inline;
+}
+.wrong_answer {
+    position: absolute;
+    width: 100%;
+    bottom: 10%;
+    left: 0;
+    color: #FF0000;
+    font-size: 48px;
+    text-align: center;
+	z-index:99;
+}
+
+.correct_answer {
+    position: absolute;
+    width: 100%;
+    bottom: 10%;
+    left: 0;
+    color: #00FF00;
+    font-size: 48px;
+    text-align: center;
+	z-index:99;
+}
+
+.timeout_answer {
+    position: absolute;
+    width: 100%;
+    bottom: 10%;
+    left: 0;
+    color: #00FFFF;
+    font-size: 48px;
+    text-align: center;
+	z-index:99;
+}
+
+#message {
+    height: 25px;
+    margin: 10px auto;
+    width: 500px;
+}
+
+
+
+
+/*framework classes*/
+.center {
+    text-align: center;
+}
+
+/*#left_screen,
+#right_screen {
+    font-size: 24px;
+}*/
+
+.press_space {
+    font-size: 1.5em;
+}
+
+.inner {
+    position: relative;
+    height: 100%;
+}
+
+
+/*css reset*/
+
+p, h1, h2, h3, h4, h5, ul, li, body, a {
+    margin: 0px;
+    padding: 0px;
+}
+
+p {
+    padding: 2px 0px;
+}
+
+.end_message {
+    width: 100%;
+    text-align: center;
+    font-size: 24px;
+    margin-top: 180px;
+}
+
+#instructions, #instructions-gnat{
+    display: none;
+    width: 94%;
+    width: 600px;
+    text-align: center;
+    margin: 20px auto;
+    font-size: 11px;
+    font-weight: bold;
+    font-family: verdana,arial,helvetica,sans-serif;
+}
+
+
+/* swipe to begin */
+#swipeToBegin {
+	position: absolute;
+	bottom: 0px;
+	width: 100%;
+	height: 50px;
+	background: url("../img/swipebg.png") repeat-x top left #000;
+	border: 1px solid #aaaaaa;
+	z-index: 9999;
+	text-align: center;
+	line-height: 50px
+}
+
+/* touch button */
+
+#touch-button {
+	position : absolute;
+	bottom: 0px;
+	width: 100%;
+	height: 50px;
+	z-index: 9999;
+	textAlign: center;
+	lineHeight: 50px;
+}
+#touch-button span{
+	color: #0000CD;
+	width:50%;
+	text-align: center;
+	text-decoration:none;
+	background: #CBEBFF;
+	border : 1px solid #3B5998;
+	border-radius:5px 5px 5px 5px;
+	padding: 2px 10px;
+	margin: 0 25%;
+	float: left;
+}
+
+/* slider */
+
+#slider-wrap {
+	width: 100%;
+	margin: 0 auto;
+	position: absolute;
+	bottom:0px;
+	z-index:9999;
+	padding-bottom:1%;
+}
+
+#well {
+	width:220px;
+	margin-left: auto;
+	margin-right: auto;
+	padding: 2px 3px 3px 3px;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+
+	background: -moz-linear-gradient(top, #010101, #181818);
+	background: -webkit-gradient(linear,left top,left bottom,color-stop(0, #010101),color-stop(1, #181818));
+
+	border: 2px solid #454545;
+	overflow: hidden;
+
+	-webkit-user-select: none;
+}
+
+h2 {
+  font-size: 20px;
+  font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-weight: 300;
+
+  height:26px;
+  padding: 1%;
+
+  -webkit-text-size-adjust: none;
+}
+
+#slider {
+	height: 30px;
+	display: inline-block;
+	vertical-align: middle;
+	line-height: 1;
+}
+
+#slider-text{
+	float:right;
+	vertical-align:middle;
+}
