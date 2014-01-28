@@ -28,18 +28,18 @@
 	<arg name="CORR">O</arg>
 	<arg name="CORR_FEED">0</arg>
 	<arg name="Timeout">T-O</arg>
-	<arg name="Timeout_FEED">-1</arg>	
+	<arg name="Timeout_FEED">-1</arg>
 	<arg name="STIM_DELAY">250</arg>
-	<arg name="IMAGE_URL">images/race/</arg>
+	<arg name="IMAGE_URL">img/race/</arg>
 	<arg name="POST_URL">/implicit/AS</arg>
 	<arg name="NEXT_URL">/implicit/Study</arg>
 	<arg name="SKIP">1</arg>
 	<arg name="DEBUG">0</arg>
 	<arg name="FORCE_KEYBOARD">0</arg>
 	<arg name="CANVAS" width="50%" height="75%" touch_width="90%" touch_height="90%"/>
-	
+
 	<!-- Touch controls configuration -->
 	<arg name="LEFT_TOUCH_AREA" width="40%" height="100%" x="0" y="0"/>
 	<arg name="RIGHT_TOUCH_AREA" width="40%" height="100%" x="0" y="0"/>
-	<arg name="SWIPE_TOUCH_AREA" width="100%" height="40px" x="0" y="0" bgcolor="#999999" border="1px solid green"><![CDATA[<p style="color:#00ff00; font-weight: bold">Swipe to begin</p>]]></arg>	
+	<arg name="SWIPE_TOUCH_AREA" width="100%" height="40px" x="0" y="0" bgcolor="#999999" border="1px solid green"><![CDATA[<p style="color:#00ff00; font-weight: bold">Swipe to begin</p>]]></arg>
 </args>
