@@ -324,9 +324,9 @@ var catsNames = function(mode){
 		}
 		//The Category array is ordered left,right,left,right.
         if(orientation == 'left'){
-            orientation = 'right'
+            orientation = 'right';
         } else {
-            orientation = 'left'
+            orientation = 'left';
         }
     });
     var serRight = _right.join('/');
@@ -335,17 +335,14 @@ var catsNames = function(mode){
     {
         case 'right': //mode "right" - returns categories on the right
             return serRight;
-            break;
-        case 'left': //mode "left" - returns categories on the left
+          case 'left': //mode "left" - returns categories on the left
             return serLeft;
-            break;
-        case 'data' : //return all the categories serialized and ready to be posted
+          case 'data' : //return all the categories serialized and ready to be posted
             data.push(serLeft, serRight);
             var serialized = data.join(',');
             return serialized;
-            break;
     }
-}
+};
 
 //image preloader, accepts image url as argument and loading it into the browsers cache.
 function loadImage(src){
@@ -367,22 +364,18 @@ function loadImage(src){
     });
     $('#message').append(pbar_brick);
 
-    $.ajax({  //ajax call to load the image to the browser, when loading is complete firing function. Note, no html elements where appended to the document
-        type: "GET",
-        //dataType: "image/jpeg",
-        url: src,
-        //Firing on successfull image loading
-        complete: function(){
-            $(pbar_brick).css('background', '#00ff00').addClass('loaded'); //indicator turn green
-            if($('.loaded').length == $('.preload').length){ //checks if there are more images to preload
-                imagesReady = true; //All images preloaded flag!
-                ImagesReady(); //When all images are successfully loaded calling a function
-            }
-        },
-        error: function(res, status, err){
-            throw new Error('Preloading image - '+ src +' has failed');
+    var img = new Image();  // create img object
+    $(img).on('load',function(){
+        $(pbar_brick).css('background', '#00ff00').addClass('loaded'); //indicator turn green
+        if($('.loaded').length == $('.preload').length){ //checks if there are more images to preload
+            imagesReady = true; //All images preloaded flag!
+            ImagesReady(); //When all images are successfully loaded calling a function
         }
     });
+    $(img).on('error',function(){
+        throw new Error('Image not found: "' + src + '"');
+    });
+    img.src = src;
 }
 
 // gets a category and pushes all its stimuli into "all_stimuli"
@@ -394,7 +387,7 @@ function getStimuli(data){
                 'num': data.CategoryNumber[0].Text,
                 'name': data.Stimuli[0].CategoryName[0].Text,
 				'fontSize' : data.fontSize
-            }
+            };
             var _stimulus = new Stimulus(_stimulusData, _stimulusCat);
             all_stimuli.push(_stimulus);
         }
