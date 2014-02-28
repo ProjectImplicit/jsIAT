@@ -1,4 +1,3 @@
-!console && (console = {log:function(){}});
 var c = {
     log: function(exp){
         if(window.console && console.log){
