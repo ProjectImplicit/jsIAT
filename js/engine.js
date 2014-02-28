@@ -1,3 +1,4 @@
+!console && (console = {log:function(){}});
 var c = {
     log: function(exp){
         if(window.console && console.log){
@@ -2020,8 +2021,7 @@ var poster = {
 
 // SCORER Utility object - very similar to Scorer.as
 var scorer = {
-    scoreTask: function(results,rb) {
-        console.log(results,rb)
+    scoreTask: function(results,rb) {        
         var b = new Array();
         b[0] = new Array();
         b[1] = new Array();
