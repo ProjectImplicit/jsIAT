@@ -4,6 +4,9 @@ var c = {
             console.log(exp);
         }
     }
+};
+if (!console) {
+    console = {log:function(){}};
 }
 $.mobile.loadingMessage = ""; //clearing the loading message for mobile devices as we do not really load pages or other content.
 
@@ -346,6 +349,8 @@ var catsNames = function(mode){
 
 //image preloader, accepts image url as argument and loading it into the browsers cache.
 function loadImage(src){
+    var def = $.Deferred();
+
     $('#app_canvas').append(htmlCreator('<div>', { //if the images are still not loaded show the "please wait" message
         text: endWait,
         'class': 'preloading'
@@ -367,15 +372,13 @@ function loadImage(src){
     var img = new Image();  // create img object
     $(img).on('load',function(){
         $(pbar_brick).css('background', '#00ff00').addClass('loaded'); //indicator turn green
-        if($('.loaded').length == $('.preload').length){ //checks if there are more images to preload
-            imagesReady = true; //All images preloaded flag!
-            ImagesReady(); //When all images are successfully loaded calling a function
-        }
+        def.resolve();
     });
     $(img).on('error',function(){
         throw new Error('Image not found: "' + src + '"');
     });
     img.src = src;
+    return def;
 }
 
 // gets a category and pushes all its stimuli into "all_stimuli"
@@ -1057,15 +1060,16 @@ function Init(){
         //finding and preloading all image-type stimuli in the study
         //TODO Category labels images preload
 		var imagesExist = false; // checks if we have images at all, so that if we don't have images we can emidiately start the task
+        var defArr = [];
         $.each(all_stimuli, function(){
             if(this.type == 'image'){
-                loadImage(this.imgSrc);
+                defArr.push(loadImage(this.imgSrc));
 				imagesExist = true;
             }
         });
         $.each(d.Categories[0].Category, function(){
             if(this.image){
-                loadImage(imgUrl+this.image);
+                defArr.push(loadImage(imgUrl+this.image));
 				imagesExist = true;
             }
         });
@@ -1073,16 +1077,18 @@ function Init(){
             instrType = this.Instructions[0].type;
 
             if(instrType == 'image'){
-                loadImage(imgUrl+this.Instructions[0].Text);
+                defArr.push(loadImage(imgUrl+this.Instructions[0].Text));
 				imagesExist = true;
             }
             if(this.Stimulus){
                 _stimulus = imgUrl + this.Stimulus[0].Text;
-                loadImage(_stimulus);
+                defArr.push(loadImage(_stimulus));
 				imagesExist = true;
             }
         });
-        if (!imagesExist) ImagesReady();
+        $.when.apply($,defArr)
+            .done(ImagesReady)
+            .fail(function(){throw new Error('failed loading images')});
 
     } else {
         errhandler('There are no blocks defined for the task', 'show')
@@ -1173,6 +1179,7 @@ var IATUtil = {
     //Function to show the Introduction and run the block features
 	// actualy this runs a new block (or ends the experiment)
     introduce: function(){
+        console.log(123)
 		//clear the display areas
 		$(right_da).html('');
 		$(left_da).html('');
@@ -2020,7 +2027,7 @@ var poster = {
 
 // SCORER Utility object - very similar to Scorer.as
 var scorer = {
-    scoreTask: function(results,rb) {        
+    scoreTask: function(results,rb) {
         var b = new Array();
         b[0] = new Array();
         b[1] = new Array();
