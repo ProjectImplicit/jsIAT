@@ -1179,7 +1179,6 @@ var IATUtil = {
     //Function to show the Introduction and run the block features
 	// actualy this runs a new block (or ends the experiment)
     introduce: function(){
-        console.log(123)
 		//clear the display areas
 		$(right_da).html('');
 		$(left_da).html('');
