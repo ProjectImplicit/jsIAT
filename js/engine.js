@@ -5,7 +5,7 @@ var c = {
         }
     }
 };
-if (!console) {
+if (!window.console) {
     console = {log:function(){}};
 }
 $.mobile.loadingMessage = ""; //clearing the loading message for mobile devices as we do not really load pages or other content.
