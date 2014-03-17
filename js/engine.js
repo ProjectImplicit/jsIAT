@@ -2025,8 +2025,10 @@ var poster = {
 
 
 // SCORER Utility object - very similar to Scorer.as
+// @param results: array of result objects
+// @param rb array of report blocks
 var scorer = {
-    scoreTask: function(results,rb) {
+    scoreTask: function scoreTask(results,rb) {
         var b = new Array();
         b[0] = new Array();
         b[1] = new Array();
@@ -2045,11 +2047,7 @@ var scorer = {
         var iat1;
         var iat2;
 
-        var rberr = new Array();
-        rberr[0] = 0;
-        rberr[1] = 0;
-        rberr[2] = 0;
-        rberr[3] = 0;
+        var rberr = [0,0,0,0];
         var block_trial_count = [0,0,0,0]; // counts the number of trials per each block so we can compute error ratio
         var trialsUnder = 0;
         var totalScoredTrials = 0;
@@ -2057,9 +2055,12 @@ var scorer = {
         var errorString;
         var trial;
         // BNG Steps 1-5
-        for(i=0;i < results.length; i++){  //  Loop through all trials
+        if (rb.length > 4) {
+            throw new Error('This player does not support more than four report blocks.');
+        }
+        for(var i=0;i < results.length; i++){  //  Loop through all trials
             trial = results[i];
-            for (j=0;j< rb.length; j++){  //  check if trial is in a report block and < 10000
+            for (var j=0;j< rb.length; j++){  // check if trial is in a report block and < 10000
                 if ((trial.block == rb[j]) && (trial.lat < 10000)){
                 	if (init.type != 'gnat') {
 	                    b[j].push([trial.lat,trial.err]);    //  add to scoring array
