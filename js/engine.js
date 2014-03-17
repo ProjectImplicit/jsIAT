@@ -913,7 +913,7 @@ function Init(){
     errPadding = p.arg.getNodeByAttribute('name', 'ERROR_PADDING').Text;
     leftKey = p.arg.getNodeByAttribute('name', 'LEFT_KEY');
     rightKey = p.arg.getNodeByAttribute('name', 'RIGHT_KEY');
-    forceKeyboard = +p.arg.getNodeByAttribute('name', 'FORCE_KEYBOARD').Text || false; // false by default
+    forceKeyboard = (+p.arg.getNodeByAttribute('name', 'FORCE_KEYBOARD').Text !== 0); // true by default
     // get touch areas from parameters or set defaults @todo: move to init{}
     leftTouchAreaConf = p.arg.getNodeByAttribute('name', 'LEFT_TOUCH_AREA');
     if (!leftTouchAreaConf) leftTouchAreaConf = {
