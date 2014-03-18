@@ -2029,6 +2029,14 @@ var poster = {
 // @param rb array of report blocks
 var scorer = {
     scoreTask: function scoreTask(results,rb) {
+        // in case multiconditions is true escape this function and report MULTICONDITIONS
+        if (d.Results[0].multiConditions=="true")
+            return("MULTICONDITIONS");
+
+        if (rb.length > 4) {
+            throw new Error('This player supports more than four report blocks only with multiConditions.');
+        }
+
         var b = new Array();
         b[0] = new Array();
         b[1] = new Array();
@@ -2055,9 +2063,7 @@ var scorer = {
         var errorString;
         var trial;
         // BNG Steps 1-5
-        if (rb.length > 4) {
-            throw new Error('This player does not support more than four report blocks.');
-        }
+
         for(var i=0;i < results.length; i++){  //  Loop through all trials
             trial = results[i];
             for (var j=0;j< rb.length; j++){  // check if trial is in a report block and < 10000
@@ -2089,10 +2095,6 @@ var scorer = {
 
         if ((trialsUnder/totalScoredTrials)>0.1)
         	return("FAST");
-
-		// in case multiconditions is true escape this function and report MULTICONDITIONS
-		if (d.Results[0].multiConditions=="true")
-			return("MULTICONDITIONS");
 
         if (rb.length == 2) {
             pool36 = scorer.poolSD(b[0],b[1]);
