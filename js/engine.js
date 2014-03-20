@@ -596,11 +596,9 @@ function Category(cat){
 	if(cat.Stimuli && cat.Stimuli[0].StartImage){
         this.startLabel = htmlCreator('<img>', {
             'class': 'clearfix cat',
-            'alt': this.name,
-            'src': imgUrl + cat.Stimuli[0].StartImage[0].Text,
-			'max-height':'75px',
-			'max-width':'230px'
-
+            alt: this.name,
+            src: imgUrl + cat.Stimuli[0].StartImage[0].Text,
+            style: 'max-height:75px; max-width:100%;'
         });
     } else if (cat.Stimuli && cat.Stimuli[0].StartWords){
         this.startLabel = htmlCreator('<div/>', {
