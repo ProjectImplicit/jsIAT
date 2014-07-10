@@ -57,7 +57,7 @@ var leftKey;
 var rightKey;
 var erR;
 var errCorr;
-var sep
+var sep;
 var stimDelay;
 var font;
 var fontSize;
@@ -68,6 +68,7 @@ var endWait;
 var instruct;
 var debug;
 var forceKeyboard; // should we force using keyboard even in touch able platforms?
+var rtl; // should we set canvas to use rtl text
 var leftTouchAreaConf;
 var swipeTouchAreaConf;
 var rightTouchAreaConf;
@@ -173,10 +174,12 @@ function htmlCreator(el_type, data){
 }
 
 function adjustCanvas(){
-    if(is_touch_device()){
+    var $canvas = $('#app_canvas');
 
+    rtl && $canvas.css('direction', 'rtl'); // if needed, set direction to rtl
+
+    if(is_touch_device()){
 		var proportions = 0.8; // proportions (as height/width)
-		var $canvas = $('#app_canvas');
 		var height, width;
 		var maxHeight = $(window).innerHeight();
 		var maxWidth = $(window).innerWidth();
@@ -207,42 +210,11 @@ function adjustCanvas(){
 
 		// scroll to top of window (hides some of the mess on the top of mobile devices)
 		window.scrollTo(0, 1);
-
-    	/*
-    	// check if we're using an ipad here
-    	var isIpad = navigator.userAgent.match(/(iPhone|iPod|iPad)/);
-    	var orientation = (Math.abs(window.orientation) == 90) ? 'landscape' : 'portrait';
-
-    	// in ipad we need to switch between the width and height if we're in landscape
-    	if (isIpad && orientation == 'landscape'){
-        	var width = screen.height * 0.9;
-        	var height = screen.width * 0.8;
-    	} else {
-        	var width = screen.width * 0.9;
-        	var height = screen.height *0.8;
-    	}
-
-		$("#app_canvas").css({
-			'width': width,
-			'height': height
-		});
-
-		// now lets scroll to the top so that we are centered
-		window.scrollTo(0,0);
-
-		// in case this adjust is when the stimulus is already presented, we recenter the stimulus.
-		// recenter the stimulus
-	    $('#stimul_wrapper').css({
-			'left': (width - $('#stimul_wrapper').width())/2,
-			'top': (height - $('#stimul_wrapper').height())/2
-	    });
-	    */
-
     } else {
 		var w_measurement = canvas.width.substr(canvas.width.length - 1) == '%' ? '%' : 'px';
 		var h_measurement = canvas.height.substr(canvas.height.length - 1) == '%' ? '%' : 'px';
 
-		$("#app_canvas").css({
+		$canvas.css({
 			'width': w_measurement == '%' ? canvas.width : (canvas.width) + w_measurement,
 			'height': h_measurement == '%' ? $(window).height() / 100 * parseInt(canvas.height) : (canvas.height) + h_measurement
 		});
@@ -912,6 +884,7 @@ function Init(){
     leftKey = p.arg.getNodeByAttribute('name', 'LEFT_KEY');
     rightKey = p.arg.getNodeByAttribute('name', 'RIGHT_KEY');
     forceKeyboard = (+p.arg.getNodeByAttribute('name', 'FORCE_KEYBOARD').Text !== 0); // true by default
+    rtl = !!+p.arg.getNodeByAttribute('name', 'RTL').Text; // false by default
     // get touch areas from parameters or set defaults @todo: move to init{}
     leftTouchAreaConf = p.arg.getNodeByAttribute('name', 'LEFT_TOUCH_AREA');
     if (!leftTouchAreaConf) leftTouchAreaConf = {

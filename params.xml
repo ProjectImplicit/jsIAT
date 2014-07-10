@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <args>
+	<arg name="RTL">0</arg>
 	<arg name="INITIAL_LOADING">Loading Task</arg>
 	<arg name="FAILED_LOADING">Failed to load task!</arg>
 	<arg name="BUILD_LOADING">Building Task</arg>
