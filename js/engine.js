@@ -1950,13 +1950,11 @@ var poster = {
 		// the only way to do this in jquery is using a fake form
 		// var fakeForm = $('<form id="fakeform" action="'+nextUrl+'" method="post">').appendTo('body');
 		var fakeForm = $('<form>',{id:'fakeform',action:nextUrl, method:'post'}).appendTo('body');
-		$.each(_tmp, function(key,value){
-			for (key in this) {
-				$(fakeForm).append(
-					$('<input type="hidden" name="'+ key +'" value="' + this[key] + '">')
-				);
-			}
-		});
+        $.each(_tmp, function(key,value){
+            for (key in this) $(fakeForm).append(
+                $('<input>', {type:'hidden', name:key, value:this[key]})
+            );
+        });
 		// for some reason, the jquery submit was sending this as ajax?
 		document.forms["fakeform"].submit();
 
