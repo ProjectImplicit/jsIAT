@@ -152,6 +152,16 @@ h1 {
 	z-index:99;
 }
 
+.game-score{
+    font-size:22px;
+    padding:2px;
+    text-align:center;
+    position:absolute;
+    bottom:0;
+    left:0;
+    right:0;
+}
+
 .correct_answer {
     position: absolute;
     width: 100%;
@@ -269,6 +279,7 @@ p {
 	margin: 0 25%;
 	float: left;
 }
+
 
 /* slider */
 

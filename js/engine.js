@@ -90,6 +90,7 @@ var nBlocksForReport = 0;
 var bl_clock = 0; 			//Block counter, always holds the index of the running block
 var bl_repeats = 0;
 var trial_count; 			//Trial counter, holds the index of the running trial
+var gameScore = 0;
 
 //timers
 var stimTimer; 				//holds the value of the delay, before the stimulus is shown.
@@ -173,8 +174,7 @@ var init = {
 
 ////////////////////////////////////Helpers Section///////////////////////////////////
 function htmlCreator(el_type, data){
-    var _obj = $(el_type, data);
-    return _obj;
+    return $(el_type, data);
 }
 
 function adjustCanvas(){
@@ -237,8 +237,9 @@ function loadIAT(){
             if (d.error) errhandler(d.error, 'force');
             //setting the page direction (added new attribute to IAT tag for right-to-left languages support)
             $('body').css('direction', d.direction);
-            fastResp = d.fastResp; //assigning fast response value
-            slowResp = d.slowResp; //assigning slow response value
+            if (d.hideScore !== 'true' && (d.gamescore || d.scoreEquation == 1)) $('.inner').append(htmlCreator('<div>', {'class':'game-score'}));
+            fastResp = +d.fastResp; //assigning fast response value
+            slowResp = +d.slowResp; //assigning slow response value
             results = d.Results && d.Results[0].Result; //results array
             //Asynchronious request to get the properties from configuration file
             $.ajax({
@@ -417,7 +418,7 @@ var processAnswer = {
 
 		//Correct response
         if (event.keyCode == answer) {
-
+            
 			// clear timeout - we got a response that overides the response timer
 			clearTimeout(responseTimeoutID);
 
@@ -439,45 +440,44 @@ var processAnswer = {
             if(feedback_da)$(feedback_da).remove();
             feedback_da = null;
 
+            updateGameScore(stimulus.latency, stimulus.wronganswer);
             processAnswer.addValues(event, stimulus, answer);//Add the trial's data.
 
 			IATUtil.displayFeedback('correct');
-			setTimeout(function(){IATUtil.clearTrial(); IATUtil.nextTrial();},IATUtil.feedbackTimer);
-
+            proceed();
+            return;
+        } 
 		// Wrong response or timeout
-        } else {
-
-			if (event.keyCode == leftKey.Text || event.keyCode == rightKey.Text || event.keyCode == 0){//It is a legitimate key of the task?
-				// if this is a timout event
-				if (event.keyCode == 0) {
-					stimulus.wronganswer = 2;
-					falseKeyHeld  = false;
-					if (leftKey.Text == 0 || rightKey.Text == 0) var feedbackType = 'wrong';
-					else var feedbackType = 'timeout';
-				} else { // this is a regular error
-					// set sticky keys
-					falseKeyHeld = true;
-					stimulus.wronganswer = 1;
-					var feedbackType = 'wrong';
-				}
-
-                //nErrs++;
-                processAnswer.processResponse(event, stimulus, answer); //Do what ever needs to be done when we have a response
-                IATUtil.displayFeedback(feedbackType);
-                if(errCorr == 0 || feedbackType == "timeout"){ //No error correction, so continue
-					// clear timeout - we got a responce that overides the rsponse timertimer
-					clearTimeout(responseTimeoutID);
-
-					// unbind interaction events
-					if (is_touch_device())$('#rightTouchArea, #leftTouchArea').unbind('touchstart');
-					else $(document).unbind(event.type);
-
-					processAnswer.addValues(event, stimulus, answer);//Add the trial's data.
-					//Continue to the next trial after giving time to see feedback
-					setTimeout(function(){IATUtil.clearTrial();IATUtil.nextTrial();},IATUtil.feedbackTimer);
-                }
+        if (event.keyCode == leftKey.Text || event.keyCode == rightKey.Text || event.keyCode == 0){//It is a legitimate key of the task?
+            // if this is a timout event
+            if (event.keyCode == 0) {
+                stimulus.wronganswer = 2;
+                falseKeyHeld  = false;
+                if (leftKey.Text == 0 || rightKey.Text == 0) var feedbackType = 'wrong';
+                else var feedbackType = 'timeout';
+            } else { // this is a regular error
+                // set sticky keys
+                falseKeyHeld = true;
+                stimulus.wronganswer = 1;
+                var feedbackType = 'wrong';
             }
-		}
+
+            //nErrs++;
+            processAnswer.processResponse(event, stimulus, answer); //Do what ever needs to be done when we have a response
+            IATUtil.displayFeedback(feedbackType);
+            if(errCorr == 0 || feedbackType == "timeout"){ //No error correction, so continue
+                // clear timeout - we got a responce that overides the rsponse timertimer
+                clearTimeout(responseTimeoutID);
+
+                // unbind interaction events
+                if (is_touch_device())$('#rightTouchArea, #leftTouchArea').unbind('touchstart');
+                else $(document).unbind(event.type);
+
+                updateGameScore(stimulus.latency, stimulus.wronganswer);
+                processAnswer.addValues(event, stimulus, answer);//Add the trial's data.
+                proceed();
+            }
+        }
 
 		// skip block on "Enter" key
         if(skip && event.keyCode == 13) {
@@ -493,6 +493,15 @@ var processAnswer = {
 
             if(feedback_da) $(feedback_da).remove();
             IATUtil.nextBlock();
+        }
+
+        function proceed(args){
+            $('.game-score').html('score: ' + gameScore); // will display only if .game-score exists
+            //Continue to the next trial after giving time to see feedback
+            setTimeout(function(){
+                IATUtil.clearTrial();
+                IATUtil.nextTrial();
+            },IATUtil.feedbackTimer);
         }
     }
 }
@@ -749,7 +758,6 @@ function Stimulus(data, cat){
 					if (displayType == 'start' && cat.startLabel) $(da).append(cat.startLabel);
 				}
 
-
 				//clear the display areas
 				$(right_da).html('');
 				$(left_da).html('');
@@ -764,20 +772,6 @@ function Stimulus(data, cat){
 					} else {
 						addLabel('right', $(right_da), globalAllCategories[categoryNum]);
 					}
-
-					/*  I think this is depricated as the category label holds an image option
-
-						if(cats[i].image){ //if the label is image!
-						var image = htmlCreator('<img>', {
-							src: d.Categories[0].Category[_tmp].image,
-							maxWidth: 120,
-							css: {
-								'float': 'left',
-								'maxWidth': '35%'
-							}
-						});
-						$('#cat'+_tmp).append(image);
-					} */
 				}
 
 				// if this is the first category and we are in gnat add instructions to top
@@ -1141,6 +1135,7 @@ var IATUtil = {
         $(left_da).html('');
         $(mid_da).html('');
         if (feedback_da) $(feedback_da).remove();
+        if (!bl_repeats) $('.game-score').html(''); // empty only when this is not a repeated block
 
         // if this is the end of the study
         if(bl_clock == d.Block.length){ 
@@ -1207,10 +1202,8 @@ var IATUtil = {
         var catTrialsLimit; //number of times to show stimulus of each category
         var pairs = {}; //pairs array abject
 		var catStack = []; // array listing a stack of category numbers to push into the sequence
-
 		//sequence utility - set of helper functions
         var seqHelper = {
-
 			// organizing function for seqHelper
 			// string categoryList	: comma delimited list of category numbers
 			// integer trials		: number of trials from these categories
@@ -1536,6 +1529,7 @@ var IATUtil = {
             stimulus = sequence[trial_count];
 			stimulus.trialNum = trial_count; 	//saving the number of trial
 			trial_count++; 						// advance trial counter
+
 			stimulus.run();
         } else IATUtil.nextBlock(); //clock to next block
             
@@ -1672,7 +1666,7 @@ var IATUtil = {
             } else {//if this is the end of the task show the proper message
                 //$('.wrapper').html('');Replace Yuri's with a "please wait" message.
                 $('.end_message').html(endWait); //show the end message while processing the results
-                if (d.results != 'false' || d.results == undefined) poster.sendTaskData();
+                poster.sendTaskData();
             }
         });
 
@@ -1696,9 +1690,7 @@ var IATUtil = {
 	    		setTimeout(function(){IATUtil.nextTrial()},1,true);
 	    	} else {//if this is the end of the task show the proper message
 	    		$('.end_message').html(tEndWait); //show the end message while processing the results
-	    		if(d.results != 'false' || d.results == undefined){
-	    		    poster.sendTaskData();
-	    		}
+                poster.sendTaskData();
     	    }
     	};
 
@@ -1866,106 +1858,100 @@ var poster = {
     },
 
     sendTaskData: function(){
-    	function getCutoff(n){
-    		var cutoff = parseFloat(results[n].cutoff);
-    		if (isNaN(cutoff)) cutoff = parseFloat(n.replace(".","0.")); // probably not needed
-    		return cutoff;
-    	}
-
-    	// put message together
-        var mess;
-        var repBlocks = d.ReportBlocks[0].Text.split(',');
-        var rl = results.length;
-        var scoreString = scorer.scoreTask(poster.scoringData, repBlocks);
-        if (scoreString == "FAST"){
-            mess = p.arg.getNodeByAttribute('name', 'FAST_TXT').Text;
-        } else if (scoreString=="ERROR") {
-            mess = p.arg.getNodeByAttribute('name', 'ERR_TXT').Text;
-		} else if (scoreString=="MULTICONDITIONS") {
-			mess = scorer.multiConditionScore(poster.scoringData);
-        } else if (scoreString == undefined || scoreString == null || !scoreString){
-            mess = p.arg.getNodeByAttribute('name', 'SCORE_ERR').Text;
-        } else if (scoreString > getCutoff(rl-1)){// score  greater than highest range
-            mess = results[rl-1].Text;
-        } else {
-        	// go through possible results and when you hit the right cutoff point return its message
-            for (i=0; i<rl; i++)   {
-                // negative cutoff
-                if (getCutoff(i) < 0 && scoreString <= getCutoff(i)) {
-                    mess = results[i].Text;
-                    break;
-                }
-                //zero cutoff
-                if (getCutoff(i) == 0 && scoreString > getCutoff(i-1) && scoreString <= getCutoff(i+1)) {
-                    mess = results[i].Text;
-                    break;
-                }
-                // non-negative cutoff
-                if (getCutoff(i) >= 0 && scoreString <= getCutoff(i)) {
-                    mess = results[i-1].Text;
-                    break;
-                }
-            }
-        }
-
-        poster.dataCollection.push({
+        var taskData = {
             'dummy': 'dummy',
             'mode': 'iatSummary',
-            'iatScore': scoreString,
-            'resultMessage': mess,
             'tid': conf.tid
+        }
+
+        if (d.results !== 'false') $.extend(taskData, composeScore());
+        if (d.results === 'false' && (d.gamescore > 0) || (d.scoreEquation == 1)) $.extend(taskData, {
+            iatScore: 0,
+            resultMessage: gameScore
         });
 
+        poster.dataCollection.push(taskData);
 
         var _tmp = poster.dataCollection;
         var a = [];
 
-		// we want to send a regular post here, not ajax, because thats what the flash does...
-		// the only way to do this in jquery is using a fake form
-		// var fakeForm = $('<form id="fakeform" action="'+nextUrl+'" method="post">').appendTo('body');
-		var fakeForm = $('<form>',{id:'fakeform',action:nextUrl, method:'post'}).appendTo('body');
+        // we want to send a regular post here, not ajax, because thats what the flash does...
+        // the only way to do this in jquery is using a fake form
+        // var fakeForm = $('<form id="fakeform" action="'+nextUrl+'" method="post">').appendTo('body');
+        var fakeForm = $('<form>',{id:'fakeform',action:nextUrl, method:'post'}).appendTo('body');
         $.each(_tmp, function(key,value){
             for (key in value) $(fakeForm).append(
                 $('<input>', {type:'hidden', name:key, value:value[key]})
             );
         });
-		// for some reason, the jquery submit was sending this as ajax?
-		document.forms["fakeform"].submit();
+        // for some reason, the jquery submit was sending this as ajax?
+        document.forms["fakeform"].submit();
 
-		/*
-        var serialized;
-        $.each(_tmp, function(){
-            for (key in this) {
-                a.push(key+"="+this[key]);
-            }
-            serialized = encodeURI(a.join("&"));
-        });
-        //Posting the data collection to the server
-        //c.log(serialized);
+            function composeScore(){
+                function getCutoff(n){
+                    var cutoff = parseFloat(results[n].cutoff);
+                    if (isNaN(cutoff)) cutoff = parseFloat(n.replace(".","0.")); // probably not needed
+                    return cutoff;
+                }
 
-        $.ajax({
-            type: 'POST',
-            url: nextUrl,
-            data: serialized,
-            processData: true,
-            complete: function(response){
-                //window.location.href = nextUrl+'?tid=2';
-                //location.reload();
-                c.log(mess);
-            },
-            success: function(response){
-                //window.location.href = window.location.href;
-                //location.reload();
-                c.log(mess);
-            },
-            error: function(res, status, err){
-                errhandler(res.responseText + ':::' + err, 'show');
+                // put message together
+                var mess;
+                var repBlocks = d.ReportBlocks[0].Text.split(',');
+                var rl = results.length;
+                var scoreString = scorer.scoreTask(poster.scoringData, repBlocks);
+                if (scoreString == "FAST"){
+                    mess = p.arg.getNodeByAttribute('name', 'FAST_TXT').Text;
+                } else if (scoreString=="ERROR") {
+                    mess = p.arg.getNodeByAttribute('name', 'ERR_TXT').Text;
+                } else if (scoreString=="MULTICONDITIONS") {
+                    mess = scorer.multiConditionScore(poster.scoringData);
+                } else if (scoreString == undefined || scoreString == null || !scoreString){
+                    mess = p.arg.getNodeByAttribute('name', 'SCORE_ERR').Text;
+                } else if (scoreString > getCutoff(rl-1)){// score  greater than highest range
+                    mess = results[rl-1].Text;
+                } else {
+                    // go through possible results and when you hit the right cutoff point return its message
+                    for (i=0; i<rl; i++)   {
+                        // negative cutoff
+                        if (getCutoff(i) < 0 && scoreString <= getCutoff(i)) {
+                            mess = results[i].Text;
+                            break;
+                        }
+                        //zero cutoff
+                        if (getCutoff(i) == 0 && scoreString > getCutoff(i-1) && scoreString <= getCutoff(i+1)) {
+                            mess = results[i].Text;
+                            break;
+                        }
+                        // non-negative cutoff
+                        if (getCutoff(i) >= 0 && scoreString <= getCutoff(i)) {
+                            mess = results[i-1].Text;
+                            break;
+                        }
+                    }
+                }
+
+                return {
+                    iatScore: scoreString,
+                    resultMessage: mess
+                };
             }
-        });
-		*/
     }
 }
 
+function updateGameScore(latency, err){
+    if (!d.gamescore && !d.equation === 1) return;
+    if (d.scoreEquation == 1) {
+        if (err) return gameScore -= Math.floor(+d.errScore);
+        if (latency < slowResp) return gameScore += Math.floor(fastResp - (latency/d.divideBy));
+    }
+
+    if (err) return gameScore -= Math.floor(+d.gamescore);
+
+    gameScore+= +d.gamescore;
+    if (slowResp > 0 && latency > slowResp) gameScore -= d.slowRespScore;
+    if (fastResp > 0 && latency < fastResp) gameScore += d.fastRespScore;
+    gameScore=Math.floor(gameScore);
+}
 
 // SCORER Utility object - very similar to Scorer.as
 // @param results: array of result objects
