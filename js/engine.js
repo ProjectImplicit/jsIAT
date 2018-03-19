@@ -12,6 +12,8 @@ $.mobile.loadingMessage = ""; //clearing the loading message for mobile devices 
 
 // fix explorer 9 bug - clashes with divx. recheck this with later versions of divx\jquery
 jQuery.fn.append = function(){return this.domManip(arguments, true, function( elem ) {if ( this.nodeType === 1 ) {var ob = this; if (jQuery.nodeName(this, "body")) ob = $(this).find(">div").get(0);ob.appendChild( elem );}});}
+// [].reduce polyfill
+Array.prototype.reduce||(Array.prototype.reduce=function(r){"use strict";if(null==this)throw new TypeError("Array.prototype.reduce called on null or undefined");if("function"!=typeof r)throw new TypeError(r+" is not a function");var e,t=Object(this),n=t.length>>>0,o=0;if(2==arguments.length)e=arguments[1];else{for(;n>o&&!(o in t);)o++;if(o>=n)throw new TypeError("Reduce of empty array with no initial value");e=t[o++]}for(;n>o;o++)o in t&&(e=r(e,t[o],o,t));return e});
 
 // assigning some global variables
 var d; //json object holding the data collection
@@ -84,7 +86,9 @@ var nErrs = 0;
 var nSlows = 0;
 
 //counters
+var nBlocksForReport = 0;
 var bl_clock = 0; 			//Block counter, always holds the index of the running block
+var bl_repeats = 0;
 var trial_count; 			//Trial counter, holds the index of the running trial
 
 //timers
@@ -230,14 +234,12 @@ function loadIAT(){
         //function that runs when the request is complete
         complete:  function(data) {
             d = $.xmlToJSON(data.responseXML); //converting xml to JSON object to allow faster access to the data
-            if(d.error){
-                errhandler(d.error, 'force');
-            };
+            if (d.error) errhandler(d.error, 'force');
             //setting the page direction (added new attribute to IAT tag for right-to-left languages support)
             $('body').css('direction', d.direction);
             fastResp = d.fastResp; //assigning fast response value
             slowResp = d.slowResp; //assigning slow response value
-            results = d.Results[0].Result; //results array
+            results = d.Results && d.Results[0].Result; //results array
             //Asynchronious request to get the properties from configuration file
             $.ajax({
                 type: "GET",
@@ -290,7 +292,7 @@ var catsNames = function(mode){
     var data = [];
     var _left = [];
     var _right = [];
-  $.each(catsArray, function(){
+    $.each(catsArray, function(){
         var num = parseInt(this);
 		//Add the category name.
 		if (num >= 0){ //But only if the category is not fake.
@@ -383,30 +385,15 @@ var processAnswer = {
 
     // Add data to the data that will be sent later.
     addValues : function(event, stimulus, answer){
-        poster.addResultValue({
-            'taskName': d.IATName[0].Text
-        });
-        poster.addResultValue({
-            'trialLatency': stimulus.latency
-        });
-        poster.addResultValue({
-            'trialNum': stimulus.trialNum
-        });
-        poster.addResultValue({
-            'trialName': stimulus.trialName
-        });
-        if (answer == leftKey.Text){
-            poster.addResultValue({
-                'trialResp': catsNames('left')
-            });
-        } else {
-            poster.addResultValue({
-                'trialResp': catsNames('right')
-            });
-        }
-        poster.addResultValue({
-            'trialErr': stimulus.wronganswer
-        });
+        var trialNum = poster.dataCollection.reduce(function(acc,val){return val.trialLatency ? ++acc : acc;},0);
+        // calculate the number of this trial (needed in cases of block repeats)
+        poster.addResultValue({ 'trialNum': trialNum });
+        poster.addResultValue({ 'taskName': d.IATName[0].Text });
+        poster.addResultValue({ 'trialLatency': stimulus.latency });
+        poster.addResultValue({ 'trialName': stimulus.trialName });
+        poster.addResultValue({ 'trialResp':answer == leftKey.Text ? catsNames('left') : catsNames('right') });
+        poster.addResultValue({ 'trialErr': stimulus.wronganswer });
+
         //adding row to the scorinf data report
         poster.scoringData.push({
             'block': parseInt(block.BlockNumber[0].Text),
@@ -499,7 +486,6 @@ var processAnswer = {
 
             IATUtil.clearTrial();
             $('#stimul_wrapper').hide();
-            poster.sendBlockData();
 
             // unbind interaction events
 			if (is_touch_device())$('#rightTouchArea, #leftTouchArea').unbind('touchstart');
@@ -1149,70 +1135,69 @@ function ImagesReady(){
 var IATUtil = {
     //Function to show the Introduction and run the block features
 	// actualy this runs a new block (or ends the experiment)
-    introduce: function(){
-		//clear the display areas
-		$(right_da).html('');
-		$(left_da).html('');
-		$(mid_da).html('');
-		if (feedback_da) $(feedback_da).remove();
+    introduce: function(block_instructions){
+        //clear the display areas
+        $(right_da).html('');
+        $(left_da).html('');
+        $(mid_da).html('');
+        if (feedback_da) $(feedback_da).remove();
 
-        if(bl_clock == d.Block.length){ //checking if this the end of the study
+        // if this is the end of the study
+        if(bl_clock == d.Block.length){ 
             $('.wrapper').html(endCont); //show the "end" text
             $('#swipeToBegin, #slider-text').html(p.arg.getNodeByAttribute('name', 'END_CONT_TOUCH').Text); // lets set the end content in the swipe elements too
 
-    	    if(is_touch_device()){
-    			showSwipeArea();
-    			IATUtil.bindSwipe('end'); //Start listening to the start block event as configured in the task xml file.
-   		    } else {
-    			IATUtil.bindSpace('end');//Start listening to space button press event to end the study
-   		    }
+            if(is_touch_device()){
+                showSwipeArea();
+                IATUtil.bindSwipe('end'); //Start listening to the start block event as configured in the task xml file.
+            } else {
+                IATUtil.bindSpace('end');//Start listening to space button press event to end the study
+            }
+            return;
+        } 
+
+        // display instructions - if they are an image and if they are text
+        block_instructions = block_instructions
+            ? block_instructions : is_touch_device()
+            ? block.TInstructions ? block.TInstructions[0] : block.Instructions[0]
+            : block.Instructions[0];
+
+        if (block_instructions.type !== 'image') $("#output").html(block_instructions.Text);
+        else $("#output").html(htmlCreator('<img>', {
+            'src': imgUrl+block_instructions.Text,
+            'css':{
+                'width': block_instructions.width,
+                'height': block_instructions.height,
+                'marginLeft': block_instructions.x,
+                'marginTop': block_instructions.y
+            }
+        }));
+
+        if (block.Stimulus){
+            _x = block.Stimulus[0].x ? block.Stimulus[0].x : 'center';
+            _y = block.Stimulus[0].y ? block.Stimulus[0].y : 'center';
+            bg_position = _x + ' ' + _y;
+            $('#content').css({
+                'background': 'url('+_stimulus+') no-repeat '+ bg_position,
+                'z-index': -1
+            });
         } else {
-			// display instructions - if they are an image and if they are text
-        	if (is_touch_device()) var block_instructions = block.TInstructions ? block.TInstructions[0] : block.Instructions[0];
-        	else var block_instructions = block.Instructions[0];
+            $('#content').css({
+                'background': 'none',
+                'z-index': -1
+            });
+        }
 
-        	// if instructions are image
-            if(block_instructions.type == 'image'){
-                $("#output").html(htmlCreator('<img>', {
-                    'src': imgUrl+block_instructions.Text,
-                    'css':{
-                        'width': block_instructions.width,
-                        'height': block_instructions.height,
-                        'marginLeft': block_instructions.x,
-                        'marginTop': block_instructions.y
-                    }
-                })
-                );
-            } else { //instructions are text
-                $("#output").html(block_instructions.Text); //showing the instructions block as it appears in the CDATA.
-            }
+        limitSequence = block.limitSequence ? true : false;
+        IATUtil.sequencer();
 
-            if(block.Stimulus){
-                _x = block.Stimulus[0].x ? block.Stimulus[0].x : 'center';
-                _y = block.Stimulus[0].y ? block.Stimulus[0].y : 'center';
-                bg_position = _x + ' ' + _y;
-                $('#content').css({
-                    'background': 'url('+_stimulus+') no-repeat '+ bg_position,
-                    'z-index': -1
-                });
-            } else {
-                $('#content').css({
-                    'background': 'none',
-                    'z-index': -1
-                });
-            }
-
-			limitSequence = block.limitSequence ? true : false;
-            IATUtil.sequencer();
-
-			// wait for ok to start trials
-			if(is_touch_device()){
-				showTouchControls();
-				showSwipeArea();
-				IATUtil.bindSwipe(); //Start listening to the start block event as configured in the task xml file.
-            } else {
-                IATUtil.bindSpace(); //Start listening to the start block event as configured in the task xml file.
-            }
+        // wait for ok to start trials
+        if(is_touch_device()){
+            showTouchControls();
+            showSwipeArea();
+            IATUtil.bindSwipe(); //Start listening to the start block event as configured in the task xml file.
+        } else {
+            IATUtil.bindSpace(); //Start listening to the start block event as configured in the task xml file.
         }
     },
 
@@ -1221,7 +1206,7 @@ var IATUtil = {
         var _pairs_num; //number of pairs
         var catTrialsLimit; //number of times to show stimulus of each category
         var pairs = {}; //pairs array abject
-		var catStack = Array(); // array listing a stack of category numbers to push into the sequence
+		var catStack = []; // array listing a stack of category numbers to push into the sequence
 
 		//sequence utility - set of helper functions
         var seqHelper = {
@@ -1503,21 +1488,11 @@ var IATUtil = {
 		sequence[sequence.length-1].display('start');
 
 		// ***** preparing block data, which will be sent to the server at the end of the block *****
-		poster.addResultValue({
-			'blockName': 'BLOCK'+block.BlockNumber[0].Text
-		});
-		poster.addResultValue({
-			'blockNum': block.BlockNumber[0].Text
-		});
-		poster.addResultValue({
-			'blockPairingDef': catsNames('data')
-		});
-		poster.addResultValue({
-			'blockTrialCnt': sequence.length
-		});
-		poster.addResultValue({
-			'mode': 'insAppletData'
-		});
+		poster.addResultValue({ 'blockName': 'BLOCK'+nBlocksForReport });
+		poster.addResultValue({ 'blockNum': nBlocksForReport });
+		poster.addResultValue({ 'blockPairingDef': catsNames('data') });
+		poster.addResultValue({ 'blockTrialCnt': sequence.length });
+		poster.addResultValue({ 'mode': 'insAppletData' });
 
     }, // end sequencer function
 
@@ -1562,26 +1537,45 @@ var IATUtil = {
 			stimulus.trialNum = trial_count; 	//saving the number of trial
 			trial_count++; 						// advance trial counter
 			stimulus.run();
-        } else {
-            //end the block and run next one
-            $('#stimul_wrapper').hide();
-            poster.sendBlockData(); //send block data
-            IATUtil.nextBlock(); //clock to next block
-        }
+        } else IATUtil.nextBlock(); //clock to next block
+            
     },
 
     //running next block
     nextBlock: function(){
-        //creating new data array for new block
-        poster.dataCollection = new Array();
-        bl_clock = bl_clock+1; //setting the block counter
+        var trialCount = parseInt(block.TrialCount[0].Text);
+
+        trial_count = 0; // actual trial counter
+        nBlocksForReport++; // keeps a running track of how many blocks we've started regardless of repeat
+
+        // repeat block
+        if (block.nRepeat > bl_repeats){
+            bl_repeats++;
+            if (block.RepeatFast) {
+                var repeatFast = block.RepeatFast[0];
+                var fastTrials = poster.dataCollection.reduce(function(acc,val){ return val.trialLatency < repeatFast.fastLat ? ++acc : acc; }, 0);
+                if (fastTrials > repeatFast.maxFast * trialCount) return IATUtil.introduce(repeatFast);
+            }
+            if (block.RepeatErr){
+                var repeatErr = block.RepeatErr[0];
+                var errTrials = poster.dataCollection.reduce(function(acc,val){ return val.trialErr === 1 ? ++acc : acc; }, 0);
+                if (errTrials > repeatErr.maxErr * trialCount) return IATUtil.introduce(repeatErr);
+            }
+        }
+
+        //end the block and run next one
+        $('#stimul_wrapper').hide();
+        poster.sendBlockData(); //send block data
+        bl_repeats = 0;
+        bl_clock++;
+
+        // reset data for the new block
+        poster.dataCollection = [];
         if(d.Block[bl_clock]){ //checking if such block exists
             block = d.Block[bl_clock]; //assigning the block variable
 			IATUtil.setCatsArray(); // set category array
-            trial_count = 0; //trial counter
         }
         IATUtil.introduce(); //introduce the block
-
     },
 
     //function to add event listeners right after the stimulus is being shown
@@ -1663,12 +1657,9 @@ var IATUtil = {
         $(document).bind(continueEvent, function(event){
             event.preventDefault();
             switch (continueEvent){
-                case 'mouseClick':
-                    break;
+                case 'mouseClick': break;
                 case 'keydown':
-                    if (event.keyCode != continueKey) {
-                        return false;
-                    }
+                    if (event.keyCode != continueKey) return false;
                     break;
             }
             $(document).unbind(continueEvent); //unbind the event listener right after it was triggered
@@ -1681,9 +1672,7 @@ var IATUtil = {
             } else {//if this is the end of the task show the proper message
                 //$('.wrapper').html('');Replace Yuri's with a "please wait" message.
                 $('.end_message').html(endWait); //show the end message while processing the results
-                if(d.results != 'false' || d.results == undefined){
-                    poster.sendTaskData();
-                }
+                if (d.results != 'false' || d.results == undefined) poster.sendTaskData();
             }
         });
 
@@ -1849,28 +1838,18 @@ var poster = {
         poster.dataCollection.push(value);
     },
     sendBlockData: function(){ //function runs at the end of each block to send the data to the server
-        poster.addResultValue({
-            'trialsSent': trial_count
-        });
-        var _tmp = poster.dataCollection;
-
-		// make sure we don't send any data in case this is a block skip
-		var blockTrialCnt, trialsSent;
-		$.each(_tmp,function(){
-			if (this.trialsSent) trialsSent = this.trialsSent;
-			if (this.blockTrialCnt) blockTrialCnt = this.blockTrialCnt;
-		});
-		if (blockTrialCnt != trialsSent) return false;
-
+        var trialsSent = poster.dataCollection.reduce(function(acc,val){return val.trialLatency ? ++acc : acc;},0);
         var a = [];
-        var serialized;
 
-        $.each(_tmp, function(){
+        poster.addResultValue({ 'trialsSent': trialsSent});
+
+        $.each(poster.dataCollection, function(){
             for (key in this) {
                 a.push(key+"="+this[key]);
             }
-            serialized = encodeURI(a.join("&"));
         });
+
+        var serialized = encodeURI(a.join("&"));
 
         $.ajax({
             type: 'POST',
@@ -1878,13 +1857,8 @@ var poster = {
             data: serialized,
             processData: true,
             complete: function(res){
-                //    c.log(response);
                 errhandler('Sent the following data: ' + serialized + '</br>with the following response: ' + res.responseText, 'show');
             },
-            success: function(res){
-            //    c.log(response);
-            },
-
             error: function(res, status, err){
                 errhandler(res.responseText + ':::' + err, 'show');
             }
@@ -1951,8 +1925,8 @@ var poster = {
 		// var fakeForm = $('<form id="fakeform" action="'+nextUrl+'" method="post">').appendTo('body');
 		var fakeForm = $('<form>',{id:'fakeform',action:nextUrl, method:'post'}).appendTo('body');
         $.each(_tmp, function(key,value){
-            for (key in this) $(fakeForm).append(
-                $('<input>', {type:'hidden', name:key, value:this[key]})
+            for (key in value) $(fakeForm).append(
+                $('<input>', {type:'hidden', name:key, value:value[key]})
             );
         });
 		// for some reason, the jquery submit was sending this as ajax?
