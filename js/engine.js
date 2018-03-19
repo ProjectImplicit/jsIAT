@@ -1867,7 +1867,7 @@ var poster = {
         if (d.results !== 'false') $.extend(taskData, composeScore());
         if (d.results === 'false' && (d.gamescore > 0) || (d.scoreEquation == 1)) $.extend(taskData, {
             iatScore: 0,
-            resultMessage: gameScore
+            resultMessage: ' '+gameScore+' '
         });
 
         poster.dataCollection.push(taskData);
@@ -1886,60 +1886,59 @@ var poster = {
         });
         // for some reason, the jquery submit was sending this as ajax?
         document.forms["fakeform"].submit();
+        function composeScore(){
+            function getCutoff(n){
+                var cutoff = parseFloat(results[n].cutoff);
+                if (isNaN(cutoff)) cutoff = parseFloat(n.replace(".","0.")); // probably not needed
+                return cutoff;
+            }
 
-            function composeScore(){
-                function getCutoff(n){
-                    var cutoff = parseFloat(results[n].cutoff);
-                    if (isNaN(cutoff)) cutoff = parseFloat(n.replace(".","0.")); // probably not needed
-                    return cutoff;
-                }
-
-                // put message together
-                var mess;
-                var repBlocks = d.ReportBlocks[0].Text.split(',');
-                var rl = results.length;
-                var scoreString = scorer.scoreTask(poster.scoringData, repBlocks);
-                if (scoreString == "FAST"){
-                    mess = p.arg.getNodeByAttribute('name', 'FAST_TXT').Text;
-                } else if (scoreString=="ERROR") {
-                    mess = p.arg.getNodeByAttribute('name', 'ERR_TXT').Text;
-                } else if (scoreString=="MULTICONDITIONS") {
-                    mess = scorer.multiConditionScore(poster.scoringData);
-                } else if (scoreString == undefined || scoreString == null || !scoreString){
-                    mess = p.arg.getNodeByAttribute('name', 'SCORE_ERR').Text;
-                } else if (scoreString > getCutoff(rl-1)){// score  greater than highest range
-                    mess = results[rl-1].Text;
-                } else {
-                    // go through possible results and when you hit the right cutoff point return its message
-                    for (i=0; i<rl; i++)   {
-                        // negative cutoff
-                        if (getCutoff(i) < 0 && scoreString <= getCutoff(i)) {
-                            mess = results[i].Text;
-                            break;
-                        }
-                        //zero cutoff
-                        if (getCutoff(i) == 0 && scoreString > getCutoff(i-1) && scoreString <= getCutoff(i+1)) {
-                            mess = results[i].Text;
-                            break;
-                        }
-                        // non-negative cutoff
-                        if (getCutoff(i) >= 0 && scoreString <= getCutoff(i)) {
-                            mess = results[i-1].Text;
-                            break;
-                        }
+            // put message together
+            var mess;
+            var repBlocks = d.ReportBlocks[0].Text.split(',');
+            var rl = results.length;
+            var scoreString = scorer.scoreTask(poster.scoringData, repBlocks);
+            if (scoreString == "FAST"){
+                mess = p.arg.getNodeByAttribute('name', 'FAST_TXT').Text;
+            } else if (scoreString=="ERROR") {
+                mess = p.arg.getNodeByAttribute('name', 'ERR_TXT').Text;
+            } else if (scoreString=="MULTICONDITIONS") {
+                mess = scorer.multiConditionScore(poster.scoringData);
+            } else if (scoreString == undefined || scoreString == null || !scoreString){
+                mess = p.arg.getNodeByAttribute('name', 'SCORE_ERR').Text;
+            } else if (scoreString > getCutoff(rl-1)){// score  greater than highest range
+                mess = results[rl-1].Text;
+            } else {
+                // go through possible results and when you hit the right cutoff point return its message
+                for (i=0; i<rl; i++)   {
+                    // negative cutoff
+                    if (getCutoff(i) < 0 && scoreString <= getCutoff(i)) {
+                        mess = results[i].Text;
+                        break;
+                    }
+                    //zero cutoff
+                    if (getCutoff(i) == 0 && scoreString > getCutoff(i-1) && scoreString <= getCutoff(i+1)) {
+                        mess = results[i].Text;
+                        break;
+                    }
+                    // non-negative cutoff
+                    if (getCutoff(i) >= 0 && scoreString <= getCutoff(i)) {
+                        mess = results[i-1].Text;
+                        break;
                     }
                 }
-
-                return {
-                    iatScore: scoreString,
-                    resultMessage: mess
-                };
             }
+
+            return {
+                iatScore: scoreString,
+                resultMessage: mess
+            };
+        }
     }
 }
 
 function updateGameScore(latency, err){
-    if (!d.gamescore && !d.equation === 1) return;
+    if (!d.gamescore && (d.scoreEquation !== 1)) return;
     if (d.scoreEquation == 1) {
         if (err) return gameScore -= Math.floor(+d.errScore);
         if (latency < slowResp) return gameScore += Math.floor(fastResp - (latency/d.divideBy));
