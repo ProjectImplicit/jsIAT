@@ -1,13 +1,7 @@
 var c = {
-    log: function(exp){
-        if(window.console && console.log){
-            console.log(exp);
-        }
-    }
+    log: function(exp){ console.log(exp); }
 };
-if (!window.console) {
-    console = {log:function(){}};
-}
+if (!window.console) console = {log:function(){}};
 $.mobile.loadingMessage = ""; //clearing the loading message for mobile devices as we do not really load pages or other content.
 
 // fix explorer 9 bug - clashes with divx. recheck this with later versions of divx\jquery
@@ -1544,15 +1538,16 @@ var IATUtil = {
 
         // repeat block
         if (block.nRepeat > bl_repeats){
+            var newData = getNewTrials(bl_repeats*trialCount, poster.dataCollection);
             bl_repeats++;
             if (block.RepeatFast) {
                 var repeatFast = block.RepeatFast[0];
-                var fastTrials = poster.dataCollection.reduce(function(acc,val){ return val.trialLatency < repeatFast.fastLat ? ++acc : acc; }, 0);
+                var fastTrials = newData.reduce(function(acc,val){ return val.trialLatency < repeatFast.fastLat ? ++acc : acc; }, 0);
                 if (fastTrials > repeatFast.maxFast * trialCount) return IATUtil.introduce(repeatFast);
             }
             if (block.RepeatErr){
                 var repeatErr = block.RepeatErr[0];
-                var errTrials = poster.dataCollection.reduce(function(acc,val){ return val.trialErr === 1 ? ++acc : acc; }, 0);
+                var errTrials = newData.reduce(function(acc,val){ return val.trialErr === 1 ? ++acc : acc; }, 0);
                 if (errTrials > repeatErr.maxErr * trialCount) return IATUtil.introduce(repeatErr);
             }
         }
@@ -1570,6 +1565,12 @@ var IATUtil = {
 			IATUtil.setCatsArray(); // set category array
         }
         IATUtil.introduce(); //introduce the block
+
+        function getNewTrials(firstPostNum, dataCollection){
+            var firstPostIndex = 0;
+            $.each(dataCollection, function(key,value){ if (value.trialNum === firstPostNum) firstPostIndex = key; });
+            return dataCollection.slice(firstPostIndex, dataCollection.length);
+        }
     },
 
     //function to add event listeners right after the stimulus is being shown
