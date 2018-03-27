@@ -237,7 +237,7 @@ function loadIAT(){
             if (d.error) errhandler(d.error, 'force');
             //setting the page direction (added new attribute to IAT tag for right-to-left languages support)
             $('body').css('direction', d.direction);
-            if (d.hideScore !== 'true' && (d.gamescore || d.scoreEquation == 1)) $('.inner').append(htmlCreator('<div>', {'class':'game-score'}));
+            if (d.hideScore !== 'true' && (d.gamescore || d.scoreEquation === '1')) $('.inner').append(htmlCreator('<div>', {'class':'game-score'}));
             fastResp = +d.fastResp; //assigning fast response value
             slowResp = +d.slowResp; //assigning slow response value
             results = d.Results && d.Results[0].Result; //results array
@@ -1938,7 +1938,7 @@ var poster = {
 }
 
 function updateGameScore(latency, err){
-    if (!d.gamescore && (d.scoreEquation !== 1)) return;
+    if (!d.gamescore && (d.scoreEquation !== '1')) return;
     if (d.scoreEquation == 1) {
         if (err) return gameScore -= Math.floor(+d.errScore);
         if (latency < slowResp) return gameScore += Math.floor(fastResp - (latency/d.divideBy));
