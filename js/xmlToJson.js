@@ -4,26 +4,28 @@
 (function($) {
     
     function replaceFont(string){
-        var _temp_obj = $('<div>', {
-            html: string
-        });       
-        var font_el = $('font', _temp_obj); //array of <font> html elements
-        $.each(font_el, function(){ //running thru the array
-            _html = $(this).html(); //html content of the tag
-            _family = $(this).attr('font-face'); //font-family attribute
-            _color = $(this).attr('color'); //color attribute
-            _size = $(this).attr('size'); //size attribute
-            $(this).replaceWith($('<span>', { //creating <p> tag element instead of the <font>
-                css: { //css properties of the <p> tag
-                    fontSize: _size + 'px', //converting size to pixels
-                    color: _color, 
-                    fontFamily: _family
-                },
-                html: _html
-            })
-            )
-        });
-        return $(_temp_obj).html();
+        var _temp_obj = $('<div>', { html: string });       
+
+        var font_el;
+        
+        do {
+            font_el = _temp_obj.find('font'); //array of <font> html elements
+            font_el.replaceWith(function(){ //running thru the array
+                var _html = $(this).html(); //html content of the tag
+                var _family = $(this).attr('font-face'); //font-family attribute
+                var _color = $(this).attr('color'); //color attribute
+                var _size = $(this).attr('size'); //size attribute
+                return $('<span>', { //creating <p> tag element instead of the <font>
+                    css: { //css properties of the <p> tag
+                        fontSize: _size + 'px', //converting size to pixels
+                        color: _color, 
+                        fontFamily: _family
+                    },
+                    html: _html
+                });
+            });
+        } while (font_el.length);
+        return _temp_obj.html();
     }
     //Converts XML DOM to JSON
     $.extend ({
